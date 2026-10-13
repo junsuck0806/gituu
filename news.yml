@@ -1,1 +1,41 @@
+name: political-news-alert
 
+on:
+  schedule:
+    - cron: "*/15 * * * *"   # 15분마다 (GitHub 서버는 UTC 기준)
+  workflow_dispatch:          # Actions 탭에서 수동 실행 버튼
+
+permissions:
+  contents: write             # seen.json을 저장소에 커밋하려면 필요
+
+concurrency:
+  group: news-alert           # 동시에 두 번 실행되어 push가 충돌하는 것을 방지
+  cancel-in-progress: false
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - run: pip install -r requirements.txt
+
+      - name: 새 기사 확인 및 알림 전송
+        run: python news_alert.py
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+
+      - name: seen.json 저장
+        if: always()          # 전송 도중 실패해도 성공분은 기록
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add seen.json
+          git diff --staged --quiet || (git commit -m "chore: update seen.json" && git push)
