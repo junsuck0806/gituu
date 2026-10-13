@@ -1,1 +1,11 @@
-
+{
+  "google_news_queries": [
+    "국회 OR 대통령실 OR 여야",
+    "국민의힘 OR 더불어민주당",
+    "국정감사 OR 본회의 OR 법안"
+  ],
+  "rss_feeds": {},
+  "include_keywords": [],
+  "exclude_keywords": [],
+  "max_age_hours": 24
+}
